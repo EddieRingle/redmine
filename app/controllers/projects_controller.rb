@@ -61,6 +61,10 @@ class ProjectsController < ApplicationController
                                               :limit => Setting.feeds_limit.to_i)
         render_feed(projects, :title => "#{Setting.app_title}: #{l(:label_project_latest)}")
       }
+      format.json {
+        projects = Project.visible_find(:all, :order => 'lft')
+        render :json => { :projects => projects }
+      }
     end
   end
   
@@ -90,11 +94,13 @@ class ProjectsController < ApplicationController
             redirect_to :controller => 'projects', :action => 'settings', :id => @project
           }
           format.xml  { head :created, :location => url_for(:controller => 'projects', :action => 'show', :id => @project.id) }
+          format.json { head :created, :location => url_for(:controller => 'projects', :action => 'show', :id => @project.id) }
         end
       else
         respond_to do |format|
           format.html
           format.xml  { render :xml => @project.errors, :status => :unprocessable_entity }
+          format.json { render :json => @project.errors, :status => :unprocessable_entity }
         end
       end
     end	
@@ -164,6 +170,7 @@ class ProjectsController < ApplicationController
     respond_to do |format|
       format.html
       format.xml
+      format.json { render :json => { :project => @project } }
     end
   end
 
@@ -189,6 +196,7 @@ class ProjectsController < ApplicationController
             redirect_to :action => 'settings', :id => @project
           }
           format.xml  { head :ok }
+          format.json { head :ok }
         end
       else
         respond_to do |format|
@@ -197,6 +205,7 @@ class ProjectsController < ApplicationController
             render :action => 'settings'
           }
           format.xml  { render :xml => @project.errors, :status => :unprocessable_entity }
+          format.json { render :json => @project.errors, :status => :unprocessable_entity }
         end
       end
     end
@@ -227,11 +236,12 @@ class ProjectsController < ApplicationController
     if request.get?
       # display confirmation view
     else
-      if params[:format] == 'xml' || params[:confirm]
+      if params[:format] == 'xml' || params[:format] == 'json' || params[:confirm]
         @project_to_destroy.destroy
         respond_to do |format|
           format.html { redirect_to :controller => 'admin', :action => 'projects' }
           format.xml  { head :ok }
+          format.json { head :ok }
         end
       end
     end
